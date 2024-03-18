@@ -1,201 +1,9 @@
 package pokemon
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
-	"strings"
 )
-
-type Type int
-
-const (
-	Normal Type = iota
-	Fire
-	Water
-	Electric
-	Grass
-	Ice
-	Fighting
-	Poison
-	Ground
-	Flying
-	Psychic
-	Bug
-	Rock
-	Ghost
-	Dragon
-	Dark
-	Steel
-)
-
-func (t Type) String() string {
-	return [...]string{"Normal", "Fire", "Water", "Electric", "Grass", "Ice",
-		"Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock",
-		"Ghost", "Dragon", "Dark", "Steel"}[t]
-}
-
-func StringToPokemonType(typeStr string) (Type, error) {
-	switch strings.ToLower(typeStr) {
-	case "normal":
-		return Normal, nil
-	case "fire":
-		return Fire, nil
-	case "water":
-		return Water, nil
-	case "electric":
-		return Electric, nil
-	case "grass":
-		return Grass, nil
-	case "ice":
-		return Ice, nil
-	case "fighting":
-		return Fighting, nil
-	case "poison":
-		return Poison, nil
-	case "ground":
-		return Ground, nil
-	case "flying":
-		return Flying, nil
-	case "psychic":
-		return Psychic, nil
-	case "bug":
-		return Bug, nil
-	case "rock":
-		return Rock, nil
-	case "ghost":
-		return Ghost, nil
-	case "dragon":
-		return Dragon, nil
-	case "dark":
-		return Dark, nil
-	case "steel":
-		return Steel, nil
-	default:
-		return 0, errors.New("invalid Pokemon type")
-	}
-}
-
-type Nature int
-
-const (
-	Adamant Nature = iota
-	Bashful
-	Bold
-	Brave
-	Calm
-	Careful
-	Docile
-	Gentle
-	Hardy
-	Hasty
-	Impish
-	Jolly
-	Lax
-	Lonely
-	Mild
-	Modest
-	Naive
-	Naughty
-	Quiet
-	Quirky
-	Rash
-	Relaxed
-	Sassy
-	Serious
-	Speed
-)
-
-var NatureInfo = map[Nature][2]string{
-	Adamant: {"Attack", "SpecialAttack"},
-	Bashful: {"", ""},
-	Bold:    {"Defense", "Attack"},
-	Brave:   {"Attack", "Speed"},
-	Calm:    {"SpecialDefense", "Attack"},
-	Careful: {"SpecialDefense", "SpecialAttack"},
-	Docile:  {"", ""},
-	Gentle:  {"SpecialDefense", "Defense"},
-	Hardy:   {"", ""},
-	Hasty:   {"Speed", "Defense"},
-	Impish:  {"Defense", "SpecialAttack"},
-	Jolly:   {"Speed", "SpecialAttack"},
-	Lax:     {"Defense", "SpecialDefense"},
-	Lonely:  {"Attack", "Defense"},
-	Mild:    {"SpecialAttack", "Defense"},
-	Modest:  {"SpecialAttack", "Attack"},
-	Naive:   {"Speed", "SpecialDefense"},
-	Naughty: {"Attack", "SpecialDefense"},
-	Quiet:   {"SpecialAttack", "Speed"},
-	Quirky:  {"", ""},
-	Rash:    {"SpecialAttack", "SpecialDefense"},
-	Relaxed: {"Defense", "Speed"},
-	Sassy:   {"SpecialDefense", "Speed"},
-	Serious: {"", ""},
-	Speed:   {"Speed", "Attack"},
-}
-
-type StatusCondition int
-
-const (
-	Healthy StatusCondition = iota
-	Sleep
-)
-
-type Status struct {
-	Condition StatusCondition
-	Duration  int
-	Damage    int
-}
-
-type Effect func(*Pokemon, *Pokemon)
-
-type MoveCategory string
-
-const (
-	Physical MoveCategory = "Physical"
-	Special  MoveCategory = "Special"
-)
-
-type Move struct {
-	Name         string
-	Type         Type
-	Category     MoveCategory
-	Power        int
-	PP           int
-	Accuracy     int
-	Effects      []Effect
-	StatusEffect StatusEffect
-}
-
-func (m *Move) Execute(user *Pokemon, target *Pokemon) {
-	if rand.Intn(100) < m.Accuracy {
-		for _, effect := range m.Effects {
-			effect(user, target)
-		}
-
-		if m.StatusEffect != nil {
-			m.StatusEffect.Apply(target)
-		}
-	}
-}
-
-// Example of defining a stat-boosting effect
-var attackBoost = func(user *Pokemon, _ *Pokemon) {
-	user.Modifiers.AttackMultiplier *= 2.0
-	if user.Modifiers.AttackMultiplier > 4.0 {
-		user.Modifiers.AttackMultiplier = 4.0
-	}
-}
-
-// Example move with multiple effects
-var buffBuff = Move{
-	Name:     "Buff buff",
-	Type:     Normal,
-	Power:    0,
-	Accuracy: 100,
-	PP:       8,
-	Effects:  []Effect{attackBoost, attackBoost}, // should apply both example effects, will probably move to test code or something
-}
 
 // These should reset at end of battle or if pokemon is switched out
 type StatModifiers struct {
@@ -215,24 +23,16 @@ type Stats struct {
 	Speed          int
 }
 
-type Species struct {
-	ID             int
-	Name           string
-	Types          []Type
-	BaseStats      Stats
-	BaseExpYield   int
-	EvolutionChain []string
-	Learnset       map[int]Move
-}
-
 type Pokemon struct {
 	Species       *Species
 	CurrentHealth int
 	Level         int
 	Experience    int
+	HeldItem      string
 	StatusManager StatusEffectManager
 	Stats         Stats
 	ivs           Stats
+	Friendship    int
 	Nature        *Nature
 	Moves         [4]Move
 	Modifiers     StatModifiers
@@ -318,6 +118,10 @@ func (p *Pokemon) LevelUp() {
 	// Should probably check for new moves to learn or if evolution happens.
 }
 
+func (p *Pokemon) HasItem(item Item) bool {
+	return true
+}
+
 func GenerateRandomIVs() Stats {
 	return Stats{
 		HP:             rand.Intn(32),
@@ -345,7 +149,3 @@ type Trainer struct {
 	Name string
 	Team []Pokemon
 }
-
-//implement constructors for these and probably to be able to store it as json too
-
-//Apply
