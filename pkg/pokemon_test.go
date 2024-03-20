@@ -59,7 +59,7 @@ func TestNewPokemon(t *testing.T) {
 		BaseStats: Stats{HP: 35, Attack: 55, Defense: 40, SpecialAttack: 50, SpecialDefense: 50, Speed: 90},
 	}
 
-	pikachu := NewPokemon(species, 5)
+	pikachu := NewPokemon(species, 5, nil, nil, [4]Move{})
 
 	if pikachu.Species.Name != "Pikachu" {
 		t.Errorf("NewPokemon() species = %v, want %v", pikachu.Species.Name, "Pikachu")
@@ -106,8 +106,8 @@ func TestCalculateStats(t *testing.T) {
 
 // Test the execution of a move with a chance to poison
 func TestMoveExecuteWithChanceToPoison(t *testing.T) {
-	user := NewPokemon(BulbasaurSpecies, 50)
-	target := NewPokemon(CharmanderSpecies, 50)
+	user := NewPokemon(BulbasaurSpecies, 50, nil, nil, [4]Move{})
+	target := NewPokemon(CharmanderSpecies, 50, nil, nil, [4]Move{})
 	poisonMove := newPoisonMove()
 
 	poisonMove.Execute(user, target)
@@ -122,8 +122,8 @@ func TestMoveExecuteWithChanceToPoison(t *testing.T) {
 
 // Test the execution of a move that causes sleep
 func TestMoveExecuteWithSleep(t *testing.T) {
-	user := NewPokemon(BulbasaurSpecies, 50)
-	target := NewPokemon(CharmanderSpecies, 50)
+	user := NewPokemon(BulbasaurSpecies, 50, nil, nil, [4]Move{})
+	target := NewPokemon(CharmanderSpecies, 50, nil, nil, [4]Move{})
 	sleepMove := NewSleepMove()
 
 	sleepMove.Execute(user, target)
@@ -138,7 +138,7 @@ func TestMoveExecuteWithSleep(t *testing.T) {
 
 // Test the update of status effects at the start of each turn
 func TestUpdateStatusEffects(t *testing.T) {
-	pokemon := NewPokemon(CharmanderSpecies, 50)
+	pokemon := NewPokemon(CharmanderSpecies, 50, nil, nil, [4]Move{})
 	pokemon.StatusManager.Primary = &SleepStatus{Duration: 2}
 
 	// Simulate turns

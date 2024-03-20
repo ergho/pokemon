@@ -2,12 +2,23 @@ package pokemon
 
 import "fmt"
 
-type Item string
 type Time string
 type Weather string
 
 type EvolutionMethod interface {
 	CanEvolve(p *Pokemon, currentTime Time, currentWeather Weather, currentLocation string) bool
+}
+
+type EvolutionStage struct {
+	EvolvesInto int
+	Method      EvolutionMethod
+}
+
+func NewEvolutionStage(id int, evolvemethod EvolutionMethod) EvolutionStage {
+	return EvolutionStage{
+		EvolvesInto: id,
+		Method:      evolvemethod,
+	}
 }
 
 type LevelEvolution struct {
@@ -35,11 +46,6 @@ func (i ItemEvolution) CanEvolve(p *Pokemon, _ Time, _ Weather, _ string) bool {
 	return p.HasItem(i.RequiredItem)
 }
 
-type EvolutionStage struct {
-	EvolvesInto int
-	Method      EvolutionMethod
-}
-
 type Species struct {
 	ID              int
 	Name            string
@@ -50,11 +56,8 @@ type Species struct {
 	Learnset        map[int]Move
 }
 
-//func GetSpeciesByID(id int) *Species {
-//	return nil
-//}
 
-func (p *Pokemon) Evolve(pokedex Pokedex, currentTime Time, currentWeather Weather, currentLocation string) error {
+func (p *Pokemon) Evolve(pokedex PokedexRepository, currentTime Time, currentWeather Weather, currentLocation string) error {
 	for _, stage := range p.Species.EvolutionStages {
 		if stage.Method.CanEvolve(p, currentTime, currentWeather, currentLocation) {
 			newSpecies := pokedex.GetSpeciesByID(stage.EvolvesInto)
