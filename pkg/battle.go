@@ -1,6 +1,6 @@
 package pokemon
 
-import "fmt"
+//import "fmt"
 
 type ActionType int
 
@@ -18,9 +18,14 @@ type BattleAction struct {
 	SwitchTo int
 }
 
+//type BattlerAction struct {
+//	Action  BattleAction
+//	Battler Battler
+//}
 type Battler interface {
 	ChooseAction() BattleAction
 	ExecuteAction(action BattleAction, opponent *Pokemon)
+	GetPokemon() *Pokemon
 }
 
 type WildPokemon struct {
@@ -35,9 +40,14 @@ func (w *WildPokemon) ChooseAction() BattleAction {
 func (w *WildPokemon) ExecuteAction(action BattleAction, opponent *Pokemon) {
 	//doing minimal logic for now...
 	if action.Type == Attack {
-		fmt.Printf("Wild %s used %s!\n", w.Pokemon.Species.Name, action.Move.Name)
-		opponent.Health.Current -= action.Move.Power // will add damage calculating at a later time
+        action.Move.Execute(w.GetPokemon(), opponent)
+		//fmt.Printf("Wild %s used %s!\n", w.Pokemon.Species.Name, action.Move.Name)
+		//opponent.Health.Current -= action.Move.Power // will add damage calculating at a later time
 	}
+}
+
+func (w *WildPokemon) GetPokemon() *Pokemon {
+	return w.Pokemon
 }
 
 func (t *Trainer) ChooseAction() BattleAction {
@@ -45,9 +55,17 @@ func (t *Trainer) ChooseAction() BattleAction {
 	return BattleAction{Type: Attack, Move: t.Team[0].Moves[0]}
 }
 
+func (t *Trainer) GetPokemon() *Pokemon {
+	if len(t.Team) > 0 && t.Team[0] != nil {
+		return t.Team[0]
+	}
+	return nil
+}
+
 func (t *Trainer) ExecuteAction(action BattleAction, opponent *Pokemon) {
 	switch action.Type {
 	case Attack:
+		action.Move.Execute(t.GetPokemon(), opponent)
 		opponent.Health.decrease(10)
 	case UseItem:
 		// later
@@ -74,31 +92,43 @@ func NewBattle(battler1, battler2 Battler) *Battle {
 
 func (b *Battle) Run() {
 	for b.Running {
-		//we keep this design for now, maybe we will track rounds or something later...
 		action1 := b.Battler1.ChooseAction()
 		action2 := b.Battler2.ChooseAction()
 
-		b.Battler1.ExecuteAction(action1, b.getBattlerPokemon(b.Battler2))
-		b.Battler2.ExecuteAction(action2, b.getBattlerPokemon(b.Battler1))
+		// Determine the order of execution based on priority and speed
+		firstBattler, secondBattler := b.determineActionOrder(b.Battler1, action1, b.Battler2, action2)
 
-        if b.checkEndConditions() {
-            b.Running = false
-        }
+		// Execute actions in the determined order
+		firstBattler.ExecuteAction(action1, secondBattler.GetPokemon())
+		if secondBattler.GetPokemon().Health.Current > 0 {
+			secondBattler.ExecuteAction(action2, firstBattler.GetPokemon())
+		}
+
+		// Check for end conditions
+		if b.checkEndConditions() {
+			b.Running = false
+		}
 	}
 }
 
-func (b *Battle) getBattlerPokemon(battler Battler) *Pokemon {
-	switch v := battler.(type) {
-	case *Trainer:
-		return &v.Team[0]
-	case *WildPokemon:
-		return v.Pokemon
+// determineActionOrder determines which battler should act first based on action priority and speed
+func (b *Battle) determineActionOrder(battler1 Battler, action1 BattleAction, battler2 Battler, action2 BattleAction) (firstBattler, secondBattler Battler) {
+	switch {
+	case action1.Move.Priority > action2.Move.Priority:
+		return battler1, battler2
+	case action1.Move.Priority < action2.Move.Priority:
+		return battler2, battler1
+	case b.Battler1.GetPokemon().Stats.Speed > b.Battler2.GetPokemon().Stats.Speed:
+		return battler1, battler2
+	case b.Battler1.GetPokemon().Stats.Speed < b.Battler2.GetPokemon().Stats.Speed:
+		return battler2, battler1
 	default:
-		// shouldnt be reachable... if implemented correctly
-		return nil
+		// If priority and speed are the same, choose randomly or by another logic
+		// Placeholder for additional logic
+		return battler1, battler2
 	}
 }
 
 func (b *Battle) checkEndConditions() bool {
-    return false
+	return true
 }

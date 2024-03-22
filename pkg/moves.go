@@ -20,6 +20,7 @@ type Move struct {
 	Accuracy     int
 	Effects      []Effect
 	StatusEffect StatusEffect
+	Priority     int
 }
 
 func (m *Move) Execute(user *Pokemon, target *Pokemon) {
@@ -51,4 +52,3 @@ var buffBuff = Move{
 	PP:       8,
 	Effects:  []Effect{attackBoost, attackBoost}, // should apply both example effects, will probably move to test code or something
 }
-

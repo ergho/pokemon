@@ -3,22 +3,38 @@ package pokemon
 type Trainer struct {
 	ID           string
 	Name         string
-	Team         []Pokemon
+	Team         [6]*Pokemon
 	Items        []Item
 	Location     string
 	Pokedex      PokedexRepository
 	Achievements []Achievement
 }
 
-func NewTrainer(name string, team []Pokemon) *Trainer {
+func NewTrainer(name string, team [6]*Pokemon) *Trainer {
 	return &Trainer{
 		Name: name,
 		Team: team,
 	}
 }
 
-func (t *Trainer) AddPokemon(pokemon Pokemon) {
-	t.Team = append(t.Team, pokemon)
+func (t *Trainer) AddPokemon(newPokemon *Pokemon) bool {
+    for i, pokemon := range t.Team {
+        if pokemon == nil {
+            t.Team[i] = newPokemon
+            return true
+        }
+
+    }
+    return false
+}
+
+func (t *Trainer) SwapActivePokemon(swapIndex int) bool {
+	if swapIndex > 0 && swapIndex < len(t.Team) && t.Team[swapIndex] != nil {
+		t.Team[0], t.Team[swapIndex] = t.Team[swapIndex], t.Team[0]
+		return true
+	}
+	return false
+
 }
 
 func (t *Trainer) RemovePokemon(pokemon Pokemon) error {
@@ -52,7 +68,6 @@ func (b *Badge) Description() string {
 func (b *Badge) Earned() bool {
 	return b.earned
 }
-
 
 // func(t *Trainer) Trade(myPokemon *Pokemon, otherTrainer *Trainer, theirPokemon *Pokemon)
 
